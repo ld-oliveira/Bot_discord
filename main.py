@@ -9,6 +9,60 @@ load_dotenv()
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='.', intents=intents)
 
+CANAIS_BOTOES = [
+    "vocês são retardados?",
+    "Boa noite Dejota",
+    "Oudri Kanda Larrai",
+    "Conselho",
+    "Core - Revolution",
+]
+
+
+class PainelMover(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        for nome_canal in CANAIS_BOTOES:
+            self.add_item(BotaoMover(nome_canal))
+
+
+class BotaoMover(discord.ui.Button):
+    def __init__(self, nome_canal):
+        super().__init__(
+            label=nome_canal,
+            style=discord.ButtonStyle.primary,
+            custom_id=f"mover_{nome_canal}"
+        )
+        self.nome_canal = nome_canal
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+
+        if not interaction.user.voice:
+            return
+
+        origem = interaction.user.voice.channel
+        destino = discord.utils.get(interaction.guild.voice_channels, name=self.nome_canal)
+        cargo = discord.utils.get(interaction.guild.roles, name="Warlord")
+
+        if not destino or not cargo:
+            return
+
+        membros = [m for m in origem.members if cargo in m.roles and not m.bot]
+        if membros:
+            await asyncio.gather(*[m.move_to(destino) for m in membros])
+
+
+async def setup_hook():
+    bot.add_view(PainelMover())
+
+bot.setup_hook = setup_hook
+
+
+@bot.command()
+async def painel(ctx):
+    await ctx.message.delete()
+    await ctx.send("# Mover Warlords", view=PainelMover())
+
 
 @bot.command()
 async def ajuda(ctx):
@@ -73,26 +127,6 @@ async def ajuda(ctx):
         )
     else:
         await ctx.send("❌ Opção inválida. Tente novamente com: `jeeves` ou `raidbots`.")
-
-
-@bot.command()
-async def mover(ctx, destino: discord.VoiceChannel):
-    # Ignora se não tiver permissão ou não estiver em canal de voz
-    if not ctx.author.guild_permissions.move_members:
-        return
-    if not ctx.author.voice:
-        return
-
-    origem = ctx.author.voice.channel
-    cargo = discord.utils.get(ctx.guild.roles, name="Warlord")
-    if not cargo:
-        return
-
-    membros = [m for m in origem.members if cargo in m.roles and not m.bot]
-    if not membros:
-        return
-
-    await asyncio.gather(*[m.move_to(destino) for m in membros])
 
 
 bot.run(os.getenv("DISCORD_TOKEN"))
