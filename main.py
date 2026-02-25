@@ -10,7 +10,7 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='.', intents=intents)
 
 CANAIS_BOTOES = [
-    "vocês são retardados?",
+    "Vocês são retardados?",
     "Boa noite Dejota",
     "Oudri Kanda Larrai",
     "Conselho",
