@@ -76,53 +76,23 @@ async def ajuda(ctx):
 
 
 @bot.command()
-async def mover(ctx, origem: discord.VoiceChannel, destino: discord.VoiceChannel):
-    # Verifica permissão de mover membros
+async def mover(ctx, destino: discord.VoiceChannel):
+    # Ignora se não tiver permissão ou não estiver em canal de voz
     if not ctx.author.guild_permissions.move_members:
-        await ctx.send("❌ Você não tem permissão para mover membros.")
         return
-
-    membros = origem.members
-
-    if not membros:
-        await ctx.send(f"❌ O canal **{origem.name}** está vazio.")
-        return
-
-    # Move todos simultaneamente
-    await asyncio.gather(*[m.move_to(destino) for m in membros])
-    await ctx.send(f"✅ {len(membros)} membro(s) movidos de **{origem.name}** para **{destino.name}**.")
-
-
-@bot.command()
-async def mover_warlords(ctx, destino: discord.VoiceChannel):
-    # Verifica permissão de mover membros
-    if not ctx.author.guild_permissions.move_members:
-        await ctx.send("❌ Você não tem permissão para mover membros.")
-        return
-
-    # Verifica se quem chamou está em um canal de voz
     if not ctx.author.voice:
-        await ctx.send("❌ Você precisa estar em um canal de voz para usar esse comando.")
-        return
-
-    # Busca o cargo Warlord no servidor
-    cargo = discord.utils.get(ctx.guild.roles, name="Warlord")
-    if not cargo:
-        await ctx.send("❌ Cargo 'Warlord' não encontrado no servidor.")
         return
 
     origem = ctx.author.voice.channel
-
-    # Filtra apenas membros com o cargo Warlord (excluindo bots)
-    membros = [m for m in origem.members if cargo in m.roles and not m.bot]
-
-    if not membros:
-        await ctx.send(f"❌ Nenhum Warlord encontrado em **{origem.name}**.")
+    cargo = discord.utils.get(ctx.guild.roles, name="Warlord")
+    if not cargo:
         return
 
-    # Move todos simultaneamente
+    membros = [m for m in origem.members if cargo in m.roles and not m.bot]
+    if not membros:
+        return
+
     await asyncio.gather(*[m.move_to(destino) for m in membros])
-    await ctx.send(f"✅ {len(membros)} Warlord(s) movidos de **{origem.name}** para **{destino.name}**.")
 
 
 bot.run(os.getenv("DISCORD_TOKEN"))
